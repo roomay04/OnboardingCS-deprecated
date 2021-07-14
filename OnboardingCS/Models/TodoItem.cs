@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace OnboardingCS.Model
+namespace OnboardingCS.Models
 {
     public class TodoItem
     {

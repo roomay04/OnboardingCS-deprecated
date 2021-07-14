@@ -1,21 +1,19 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OnboardingCS.DTO;
-using OnboardingCS.Model;
+using OnboardingCS.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 using System.Threading.Tasks;
 
-// This file is generated from Controller (empty)
 namespace OnboardingCS.Controllers
 {
-    [ApiController] // Marks the class with the [ApiController] attribute. This attribute indicates that the controller responds to web API requests.
-    [Route("api/[controller]")]
     // public class LabelsController : Controller
     // Don't use Controller class, use ControllerBase instead
     // Controller derives from ControllerBase and adds support for views, so it's for handling web pages, not web API requests.
-    public class LabelsController : ControllerBase 
+    public class LabelsController : BaseController 
     {
         /*public IActionResult Index()
         {
@@ -44,10 +42,10 @@ namespace OnboardingCS.Controllers
             }
             else
             {
-                Label newLabel = new Label() { labelId = _labels.Count(), labelName = labelRequest.labelName, todos = new List<TodoItem>() { newTodo } };
-                _labels = _labels.Append(newLabel);
+                selectedLabel = new Label() { labelId = 1, labelName = labelRequest.labelName, todos = new List<TodoItem>() { newTodo } };
+                _labels = _labels.Append(selectedLabel);
             }
-            return new OkObjectResult(_labels);
+            return new CreatedAtRouteResult("LabelLink",new { id = selectedLabel.labelId }, selectedLabel); //#TODO ini gimana sih kok dia ga ngarah ke yg bener
         }
 
         [HttpGet]
@@ -60,6 +58,21 @@ namespace OnboardingCS.Controllers
                 return new OkObjectResult(_labels);
             }
             return new BadRequestObjectResult("No Labels");
+        }
+
+        [HttpGet("{id}", Name = "LabelLink")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(Label), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        /*[ProducesErrorResponseType(]*/ //ini apa sih?
+        public ActionResult<Label> Get(int id)
+        {
+            Label label = _labels.FirstOrDefault(label => label.labelId == id);
+            if (label != null)
+            {
+                return new OkObjectResult(label);
+            }
+            return new BadRequestObjectResult(id);
         }
 
     }
