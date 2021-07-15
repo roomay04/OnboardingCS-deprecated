@@ -205,7 +205,7 @@ namespace OnboardingCS.Controllers
             {
                 TodoId = _todoItems.Count(),
                 TodoName = dto.TodoName,
-                TodoIsDone = dto.isDone
+                TodoIsDone = dto.TodoIsDone
             };
         }
     }

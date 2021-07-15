@@ -11,6 +11,6 @@ namespace OnboardingCS.DTO
         public int TodoId { get; set; }
         [Required]
         public string TodoName { get; set; }
-        public bool isDone { get; set; }
+        public bool TodoIsDone { get; set; }
     }
 }

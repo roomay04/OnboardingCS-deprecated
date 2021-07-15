@@ -1,18 +1,17 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OnboardingCS.DTO;
 using OnboardingCS.Models;
 using System;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
+using AutoMapper;
 
 namespace OnboardingCS.Controllers
 {
-    // public class LabelsController : Controller
-    // Don't use Controller class, use ControllerBase instead
-    // Controller derives from ControllerBase and adds support for views, so it's for handling web pages, not web API requests.
     public class LabelsController : BaseController 
     {
         /*public IActionResult Index()
@@ -20,32 +19,13 @@ namespace OnboardingCS.Controllers
             return View();
         }*/
         private static IEnumerable<Label> _labels = new List<Label>();
+        private UnitOfWork _unitOfWork;
+        private IMapper _mapper;
 
-        [HttpPost] //attributes to specify the supported HTTP action verb
-        [ProducesResponseType(StatusCodes.Status201Created)] // any known HTTP status codes that could be returned
-        [ProducesResponseType(StatusCodes.Status400BadRequest)] // specify any known HTTP status codes that could be returned
-        public ActionResult<Label> Create(LabelDTO labelRequest)
+        public LabelsController(UnitOfWork unitOfWork, IMapper mapper)
         {
-            TodoItem newTodo = new TodoItem() { TodoId = labelRequest.todos.TodoId, TodoName = labelRequest.todos.TodoName, TodoIsDone = labelRequest.todos.isDone };
-            Label selectedLabel = _labels.FirstOrDefault(currLabel => currLabel.labelName == labelRequest.labelName);
-            if (selectedLabel != null)
-            {
-                TodoItem selectedTodo = selectedLabel.todos.FirstOrDefault(currTodo => currTodo.TodoId == labelRequest.todos.TodoId);
-                if (selectedTodo != null)
-                {
-                    selectedTodo = newTodo;
-                }
-                else
-                {
-                    selectedLabel.todos = selectedLabel.todos.Append(newTodo); //TODO: bener gini ga ya untuk assignnya
-                }                
-            }
-            else
-            {
-                selectedLabel = new Label() { labelId = 1, labelName = labelRequest.labelName, todos = new List<TodoItem>() { newTodo } };
-                _labels = _labels.Append(selectedLabel);
-            }
-            return new CreatedAtRouteResult("LabelLink",new { id = selectedLabel.labelId }, selectedLabel); //#TODO ini gimana sih kok dia ga ngarah ke yg bener
+            _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -53,11 +33,8 @@ namespace OnboardingCS.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<Label>>> GetAll()
         {
-            if (_labels.Count() > 0)
-            {
-                return new OkObjectResult(_labels);
-            }
-            return BadRequest();
+            var result = await _unitOfWork.LabelRepository.GetAll().ToListAsync();
+            return new OkObjectResult(result);
         }
 
         [HttpGet("{id}", Name = "LabelLink")]
@@ -67,12 +44,29 @@ namespace OnboardingCS.Controllers
         /*[ProducesErrorResponseType(]*/ //ini apa sih?
         public ActionResult<Label> Get(int id)
         {
-            Label label = _labels.FirstOrDefault(label => label.labelId == id);
+            Label label = _labels.FirstOrDefault(label => label.LabelId == id);
             if (label != null)
             {
                 return new OkObjectResult(label);
             }
             return new BadRequestObjectResult(id);
+        }
+
+        [HttpPost]
+        [Route("")]
+        [ProducesResponseType(typeof(string), 200)]
+        [ProducesResponseType(typeof(string), 400)]
+        public async Task<ActionResult> CreateAsync([FromBody] LabelDTO labelDTO)
+        {
+            var isExist = _unitOfWork.LabelRepository.GetAll().Where(x => x.LabelName == labelDTO.LabelName).Any();
+            if (!isExist)
+            {
+                var book = _mapper.Map<Label>(labelDTO);
+                await _unitOfWork.LabelRepository.AddAsync(book);
+                await _unitOfWork.SaveAsync();
+                return new OkResult();
+            }
+            return new BadRequestResult();
         }
 
     }
