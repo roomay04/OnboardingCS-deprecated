@@ -93,13 +93,20 @@ namespace OnboardingCS.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)] // any known HTTP status codes that could be returned
         [ProducesResponseType(StatusCodes.Status400BadRequest)] // specify any known HTTP status codes that could be returned
         [HttpPost]
-        public async Task<ActionResult<IEnumerable<TodoItem>>> Post([FromBody] TodoItemDTO todoItemDTO)
+        public async Task<ActionResult<IEnumerable<TodoItemDTO>>> Post([FromBody] TodoItemDTO todoItemDTO)
         {
-            var todoItem = _mapper.Map<TodoItem>(todoItemDTO);
-            TodoItem newTodo = await _unitOfWork.TodoItemRepository.AddAsync(todoItem);
-            await _unitOfWork.SaveAsync();
+            if (todoItemDTO.LabelId != Guid.Empty && _unitOfWork.LabelRepository.IsExist( label => label.LabelId == todoItemDTO.LabelId))
+            {
+                var todoItem = _mapper.Map<TodoItem>(todoItemDTO);
+                TodoItem newTodo = await _unitOfWork.TodoItemRepository.AddAsync(todoItem);
+                await _unitOfWork.SaveAsync();
 
-            return CreatedAtRoute("TodoDetailLink", new { id = todoItem.TodoId }, newTodo);
+                return CreatedAtRoute("TodoDetailLink", new { id = todoItem.TodoId }, _mapper.Map<TodoItemDTO>(todoItem));
+            }
+            return new BadRequestObjectResult("LabelId is not found");
+            // Kalau ga di handle error ini
+            // Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while updating the entries. See the inner exception for details.
+            // --->Microsoft.Data.SqlClient.SqlException(0x80131904): The INSERT statement conflicted with the FOREIGN KEY constraint "FK_TodoItems_Labels_LabelId".The conflict occurred in database "hanifa-db", table "dbo.Labels", column 'LabelId'.
         }
 
         // PUT api/<TodosController>/5
@@ -174,7 +181,7 @@ namespace OnboardingCS.Controllers
         public async Task<ActionResult<TodoItem>> Put2(Guid id, [FromBody] TodoItem todoItemDTO)
         {
             // kalau ga ketemu errornya apa? 
-            bool isExists = await _unitOfWork.TodoItemRepository.IsExist(curr => curr.TodoId == todoItemDTO.TodoId);
+            bool isExists = _unitOfWork.TodoItemRepository.IsExist(curr => curr.TodoId == todoItemDTO.TodoId);
             //todoItem.TodoName = todoItemDTO.TodoName;
             //todoItem.TodoIsDone = todoItemDTO.TodoIsDone;
             //_unitOfWork.TodoItemRepository.Edit(todoItem);
@@ -204,7 +211,7 @@ namespace OnboardingCS.Controllers
         /// <param name="item"></param>
         /// <returns>All recent todo items</returns>
         /// <response code="200">Returns all recent todo items</response>
-        /// <response code="404">If the item is null</response>  
+        /// <response code="400">If the item is with given id is not found</response>  
         [ProducesResponseType(typeof(List<TodoItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Produces(MediaTypeNames.Application.Json)]
@@ -212,8 +219,33 @@ namespace OnboardingCS.Controllers
         public ActionResult<IEnumerable<TodoItem>> Delete(Guid id)
         {
             //if (_unitOfWork.TodoItemRepository.IsExist(selectedTodo ))
-            _unitOfWork.TodoItemRepository.Delete(selectedTodo => selectedTodo.TodoId == id);
-            return new OkResult();
+            if (_unitOfWork.TodoItemRepository.IsExist( curr => curr.TodoId == id))
+            { 
+                _unitOfWork.TodoItemRepository.Delete(selectedTodo => selectedTodo.TodoId == id);
+                return new OkResult();
+            }
+            return BadRequest();
+        }
+
+        // GET /TodoItems/Label?LabelId={labelId}
+        /// <summary>
+        /// Get TodoItem by Label.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     GET /TodoItems?LabelId={labelId}
+        ///
+        /// </remarks>
+        /// <param name="item"></param>
+        /// <returns>All recent todo items</returns>
+        /// <response code="200">Returns all todo items with given label id</response>
+        /// <response code="400">If the item is with given label id is not found</response> 
+        [HttpGet("Labels")]
+        public async Task<ActionResult> GetByLabelId([FromQuery] Guid labelId) 
+        {
+            var result = await _unitOfWork.TodoItemRepository.GetAll().Where(todo => todo.LabelId == labelId).Include(todo => todo.Label).ToListAsync();
+            return new OkObjectResult(result);
         }
 
         ////// use path "/id" to prevent conflict with GetAll()

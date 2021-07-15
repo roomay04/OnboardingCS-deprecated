@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace OnboardingCS.Models
@@ -14,6 +15,7 @@ namespace OnboardingCS.Models
         public Guid LabelId { get; set; }
         [Required]
         public string LabelName { get; set; }
-        //public List<TodoItem> Todos { get; set; } // ini bikin error LabelId ga ada di TodoItem
+        [JsonIgnore]
+        public List<TodoItem> Todos { get; set; } // ini bikin error LabelId ga ada di TodoItem
     }
 }

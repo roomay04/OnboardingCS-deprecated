@@ -18,6 +18,9 @@ namespace OnboardingCS.Models
         [Required]
         public bool TodoIsDone { get; set; }
         public DateTime DueDate { get; set; }
+        public Guid? LabelId { get; set; }
 
+        [ForeignKey("LabelId")]
+        public Label Label { get; set; }
     }
 }

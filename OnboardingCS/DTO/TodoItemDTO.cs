@@ -15,6 +15,7 @@ namespace OnboardingCS.DTO
         public string TodoName { get; set; }
         public bool TodoIsDone { get; set; }
         public DateTime DueDate { get; set; }
+        public Guid LabelId { get; set; }
 
         //public Label Label { get; set; }
         public TodoItemDTO()
