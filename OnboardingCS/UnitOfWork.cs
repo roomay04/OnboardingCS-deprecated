@@ -16,12 +16,14 @@ namespace OnboardingCS
         private readonly HanOnboardingSkdDbContext dbContext;
 
         public LabelRepository LabelRepository { get; }
+        public TodoItemRepository TodoItemRepository { get; }
 
         public UnitOfWork(HanOnboardingSkdDbContext context)
         {
             dbContext = context;
 
             LabelRepository = new LabelRepository(context);
+            TodoItemRepository = new TodoItemRepository(context);
         }
 
         public void Save()

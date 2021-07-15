@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OnboardingCS.DTO;
 using OnboardingCS.Models;
 using System;
@@ -16,12 +18,14 @@ namespace OnboardingCS.Controllers
 {
     public class TodoItemsController : BaseController
     {
-        private static List<TodoItem> _todoItems = new List<TodoItem>(){
-                new TodoItem {TodoId = 1, TodoName = "Masak1", TodoIsDone = false },
-                new TodoItem {TodoId = 2, TodoName = "Masak2", TodoIsDone = false },
-                new TodoItem {TodoId = 3, TodoName = "Masak3", TodoIsDone = false },
-                new TodoItem {TodoId = 4, TodoName = "Masak4", TodoIsDone = false },
-            };
+        private UnitOfWork _unitOfWork;
+        private IMapper _mapper;
+
+        public TodoItemsController(UnitOfWork unitOfWork, IMapper mapper)
+        {
+            _mapper = mapper;
+            _unitOfWork = unitOfWork;
+        }
 
         // GET: api/<TodosController>
         /// <summary>
@@ -35,13 +39,14 @@ namespace OnboardingCS.Controllers
         [ProducesResponseType(typeof(List<TodoItem>), 200)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpGet]
-        public ActionResult<IEnumerable<TodoItem>> GetAll()
+        public async Task<ActionResult<IEnumerable<TodoItemDTO>>> GetAll()
         {
-            if (_todoItems.Count > 0)
+            var result = await _unitOfWork.TodoItemRepository.GetAll().ToListAsync();
+            if (result.Count > 0)
             {
-                return new OkObjectResult(_todoItems);
+                return new OkObjectResult(result);
             }
-            return BadRequest();
+            return new BadRequestResult();
         }
 
         // GET: api/<TodosController>
@@ -57,38 +62,14 @@ namespace OnboardingCS.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(Label), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult<TodoItem> Get([FromRoute] int id)
+        public async Task<ActionResult<TodoItem>> Get([FromRoute] Guid id)
         {
-            Console.WriteLine("test");
-            Console.WriteLine(Request.Path);
-            TodoItem item = _todoItems.FirstOrDefault(item => item.TodoId == id);
+            TodoItem item = await _unitOfWork.TodoItemRepository.GetByIdAsync(id);
             if (item != null)
             {
                 return new OkObjectResult(item);
             }
             return new NotFoundResult();
-        }
-
-        // use path "/id" to prevent conflict with GetAll()
-        // GET api/<TodosController>/id?id={id}
-        /// <summary>
-        /// Get a TodoItem using param (just test).
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns>Selected todo item with given Id</returns>
-        /// <response code="201">Returns selected todo item</response>
-        /// <response code="404">If no items with selected Id</response>
-        [HttpGet("id")]
-        public ActionResult<TodoItem> GetFromParam([FromQuery] int id)
-        {
-            Console.WriteLine("test");
-            Console.WriteLine(Request.Path);
-            TodoItem item = _todoItems.FirstOrDefault(item => item.TodoId == id);
-            if (item != null)
-            {
-                return new OkObjectResult(item);
-            }
-            return new BadRequestObjectResult(id);
         }
 
         /// <summary>
@@ -184,29 +165,28 @@ namespace OnboardingCS.Controllers
             return NotFound();
         }
 
-        /*// TODO with Async api/<TodosController>/5
-        [HttpGet("{id}/async")]
-        public ActionResult<TodoItem> Get(int id)
-        {
-            Console.WriteLine("test");
-            Console.WriteLine(Request.Path);
-            TodoItem item = _todoItems.FirstOrDefault(item => item.TodoId == id);
-            if (item != null)
-            {
-                return new OkObjectResult(item);
-            }
-            return new BadRequestObjectResult(id);
-        }*/
 
 
-        private TodoItem TodoDTOtoTodo(TodoItemDTO dto)
-        {
-            return new TodoItem
-            {
-                TodoId = _todoItems.Count(),
-                TodoName = dto.TodoName,
-                TodoIsDone = dto.TodoIsDone
-            };
-        }
+        //// use path "/id" to prevent conflict with GetAll()
+        //// GET api/<TodosController>/id?id={id}
+        ///// <summary>
+        ///// Get a TodoItem using param (just test).
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <returns>Selected todo item with given Id</returns>
+        ///// <response code="201">Returns selected todo item</response>
+        ///// <response code="404">If no items with selected Id</response>
+        //[HttpGet("id")]
+        //public ActionResult<TodoItem> GetFromParam([FromQuery] int id)
+        //{
+        //    Console.WriteLine("test");
+        //    Console.WriteLine(Request.Path);
+        //    TodoItem item = _todoItems.FirstOrDefault(item => item.TodoId == id);
+        //    if (item != null)
+        //    {
+        //        return new OkObjectResult(item);
+        //    }
+        //    return new BadRequestObjectResult(id);
+        //}
     }
 }

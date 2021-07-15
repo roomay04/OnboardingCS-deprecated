@@ -9,12 +9,11 @@ namespace OnboardingCS.Models
 {
     public class Label
     {
-        [Required]
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int LabelId { get; set; }
+        public Guid LabelId { get; set; }
         [Required]
         public string LabelName { get; set; }
-        public IEnumerable<TodoItem> Todos { get; set; }
+        //public IEnumerable<TodoItem> Todos { get; set; }
     }
 }

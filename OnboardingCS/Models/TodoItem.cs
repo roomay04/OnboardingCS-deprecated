@@ -12,8 +12,10 @@ namespace OnboardingCS.Models
 
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int TodoId { get; set; } // #TODO harusnya apa ya selain int?
+        public Guid TodoId { get; set; } 
+        [Required]
         public string TodoName { get; set; }
+        [Required]
         public bool TodoIsDone { get; set; }
         public DateTime DueDate { get; set; }
     }

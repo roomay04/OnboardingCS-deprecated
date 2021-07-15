@@ -42,7 +42,7 @@ namespace OnboardingCS.Controllers
         [ProducesResponseType(typeof(Label), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         /*[ProducesErrorResponseType(]*/ //ini apa sih?
-        public ActionResult<Label> Get(int id)
+        public ActionResult<Label> Get(Guid id)
         {
             Label label = _labels.FirstOrDefault(label => label.LabelId == id);
             if (label != null)
