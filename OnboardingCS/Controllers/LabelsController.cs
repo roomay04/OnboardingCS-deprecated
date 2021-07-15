@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OnboardingCS.DTO;
 using OnboardingCS.Models;
@@ -24,13 +24,13 @@ namespace OnboardingCS.Controllers
         [HttpPost] //attributes to specify the supported HTTP action verb
         [ProducesResponseType(StatusCodes.Status201Created)] // any known HTTP status codes that could be returned
         [ProducesResponseType(StatusCodes.Status400BadRequest)] // specify any known HTTP status codes that could be returned
-        public ActionResult<Label> Create(LabelRequest labelRequest)
+        public ActionResult<Label> Create(LabelDTO labelRequest)
         {
-            TodoItem newTodo = new TodoItem() { todoId = labelRequest.todos.todoId, todoName = labelRequest.todos.todoName, todoIsDone = labelRequest.todos.isDone };
+            TodoItem newTodo = new TodoItem() { TodoId = labelRequest.todos.TodoId, TodoName = labelRequest.todos.TodoName, TodoIsDone = labelRequest.todos.isDone };
             Label selectedLabel = _labels.FirstOrDefault(currLabel => currLabel.labelName == labelRequest.labelName);
             if (selectedLabel != null)
             {
-                TodoItem selectedTodo = selectedLabel.todos.FirstOrDefault(currTodo => currTodo.todoId == labelRequest.todos.todoId);
+                TodoItem selectedTodo = selectedLabel.todos.FirstOrDefault(currTodo => currTodo.TodoId == labelRequest.todos.TodoId);
                 if (selectedTodo != null)
                 {
                     selectedTodo = newTodo;
@@ -51,13 +51,13 @@ namespace OnboardingCS.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<Label>), 200)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<IEnumerable<Label>> Get()
+        public async Task<ActionResult<IEnumerable<Label>>> GetAll()
         {
             if (_labels.Count() > 0)
             {
                 return new OkObjectResult(_labels);
             }
-            return new BadRequestObjectResult("No Labels");
+            return BadRequest();
         }
 
         [HttpGet("{id}", Name = "LabelLink")]
