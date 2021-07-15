@@ -16,8 +16,8 @@ namespace OnboardingCS.DTO
         public bool TodoIsDone { get; set; }
         public DateTime DueDate { get; set; }
         public Guid LabelId { get; set; }
-
-        //public Label Label { get; set; }
+        //jadi muncul karena ada ini dan ada mapping dari model juga
+        public LabelDTO Label { get; set; } //pas pake LabelDTO, dia langsung dapet nested 2x, tapi pas pake Label aja, cuma sekali aja
         public TodoItemDTO()
         {
             TodoIsDone = false;

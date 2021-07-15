@@ -42,6 +42,7 @@ namespace OnboardingCS.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TodoItemDTO>>> GetAll()
         {
+            // include ga ngaruh ngebuat jadi muncul di json, yg ngebuat muncul itu modelnya/DTOnya
             List<TodoItemDTO> result = await _unitOfWork.TodoItemRepository.GetAll().ProjectTo<TodoItemDTO>(_mapper.ConfigurationProvider).ToListAsync();
             if (result.Count > 0)
             {
