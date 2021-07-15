@@ -148,7 +148,8 @@ namespace OnboardingCS.Controllers
             TodoItem selectedTodo = _todoItems.FirstOrDefault( currTodo => currTodo.TodoId == todoItem.TodoId);
             if (selectedTodo != null)
             {
-                selectedTodo = new TodoItem() { TodoName = todoItem.TodoName, TodoIsDone = todoItem.TodoIsDone };
+                selectedTodo.TodoName = todoItem.TodoName;
+                selectedTodo.TodoIsDone = todoItem.TodoIsDone;
                 return _todoItems.FirstOrDefault(currTodo => currTodo.TodoId == todoItem.TodoId);
             }
             return new NotFoundResult();
