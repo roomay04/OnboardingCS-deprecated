@@ -16,6 +16,6 @@ namespace OnboardingCS.Models
         }
 
         public DbSet<Label> Labels { get; set; }
-        //public DbSet<Author> Authors { get; set; }
+        public DbSet<TodoItem> TodoItems { get; set; }
     }
 }

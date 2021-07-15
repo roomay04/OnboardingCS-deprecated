@@ -8,7 +8,7 @@ namespace OnboardingCS.DTO
 {
     public class TodoItemDTO
     {
-        public int TodoId { get; set; }
+        public Guid TodoId { get; set; }
         [Required]
         public string TodoName { get; set; }
         public bool TodoIsDone { get; set; }

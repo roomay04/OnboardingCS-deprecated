@@ -14,6 +14,8 @@ namespace OnboardingCS
         {
             CreateMap<LabelDTO, Label>();
             CreateMap<Label, LabelDTO>();
+            CreateMap<TodoItem, TodoItemDTO>();
+            CreateMap<TodoItemDTO, TodoItem>();
         }
     }
 }

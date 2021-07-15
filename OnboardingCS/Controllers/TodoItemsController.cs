@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -36,12 +37,12 @@ namespace OnboardingCS.Controllers
         /// <response code="400">If no items created</response>  
         /// 
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(List<TodoItem>), 200)]
+        [ProducesResponseType(typeof(List<TodoItemDTO>), 200)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TodoItemDTO>>> GetAll()
         {
-            var result = await _unitOfWork.TodoItemRepository.GetAll().ToListAsync();
+            List<TodoItemDTO> result = await _unitOfWork.TodoItemRepository.GetAll().ProjectTo<TodoItemDTO>(_mapper.ConfigurationProvider).ToListAsync();
             if (result.Count > 0)
             {
                 return new OkObjectResult(result);
@@ -80,9 +81,8 @@ namespace OnboardingCS.Controllers
         ///
         ///     POST /Todo
         ///     {
-        ///        "id": 1,
-        ///        "name": "Item1",
-        ///        "isDone": true
+        ///        "TodoName": "Item1",
+        ///        "TodoIsDone": true
         ///     }
         ///
         /// </remarks>
@@ -93,12 +93,13 @@ namespace OnboardingCS.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)] // any known HTTP status codes that could be returned
         [ProducesResponseType(StatusCodes.Status400BadRequest)] // specify any known HTTP status codes that could be returned
         [HttpPost]
-        public ActionResult<IEnumerable<TodoItem>> Post([FromBody] TodoItemDTO todoItem)
+        public async Task<ActionResult<IEnumerable<TodoItem>>> Post([FromBody] TodoItemDTO todoItemDTO)
         {
-            TodoItem newTodo = TodoDTOtoTodo(todoItem);
-            _todoItems.Add(newTodo);
+            var todoItem = _mapper.Map<TodoItem>(todoItemDTO);
+            TodoItem newTodo = await _unitOfWork.TodoItemRepository.AddAsync(todoItem);
+            await _unitOfWork.SaveAsync();
 
-            return CreatedAtRoute("TodoDetailLink", new { id = todoItem.TodoId}, newTodo);
+            return CreatedAtRoute("TodoDetailLink", new { id = todoItem.TodoId }, newTodo);
         }
 
         // PUT api/<TodosController>/5
@@ -124,16 +125,60 @@ namespace OnboardingCS.Controllers
         [ProducesResponseType(typeof(TodoItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Produces(MediaTypeNames.Application.Json)]
-        public ActionResult<TodoItem> Put(int id, [FromBody] TodoItem todoItem)
+        public async Task<ActionResult<TodoItem>> Put(Guid id, [FromBody] TodoItem todoItemDTO)
         {
-            TodoItem selectedTodo = _todoItems.FirstOrDefault( currTodo => currTodo.TodoId == todoItem.TodoId);
-            if (selectedTodo != null)
-            {
-                selectedTodo.TodoName = todoItem.TodoName;
-                selectedTodo.TodoIsDone = todoItem.TodoIsDone;
-                return _todoItems.FirstOrDefault(currTodo => currTodo.TodoId == todoItem.TodoId);
-            }
-            return new NotFoundResult();
+            // kalau ga ketemu errornya apa? 
+            var todoItem = await _unitOfWork.TodoItemRepository.GetSingleAsync(curr => curr.TodoId == todoItemDTO.TodoId);
+            todoItem.TodoName = todoItemDTO.TodoName;
+            todoItem.TodoIsDone = todoItemDTO.TodoIsDone;
+            _unitOfWork.TodoItemRepository.Edit(todoItem);
+
+            //TodoItem todoItem2 = _mapper.Map<TodoItem>(todoItemDTO);
+            //todoItem2.TodoId = todoItem.TodoId;
+            //_unitOfWork.TodoItemRepository.Edit(todoItem);
+            await _unitOfWork.SaveAsync();
+
+            return CreatedAtRoute("TodoDetailLink", new { id = todoItem.TodoId }, todoItem); //TODO: kalau post benernya pake 201 atau 200 ya?
+        }
+
+        // PUT api/<TodosController>/5
+        /// <summary>
+        /// Update a TodoItem with another approach.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     POST /Todo
+        ///     {
+        ///        "id": 1,
+        ///        "name": "Item1",
+        ///        "isDone": true
+        ///     }
+        ///
+        /// </remarks>
+        /// <param name="item"></param>
+        /// <returns>A newly updated TodoItem</returns>
+        /// <response code="201">Returns the updated created item</response>
+        /// <response code="400">If the item not found</response>  
+        //[HttpPut("/edit2/{id}")] -> ini ngebuat dia jadi /edit2/{id}
+        [HttpPut("edit2/{id}")] // -> ini ngebuat jadi /api/[controller]/edit2/{id} -> tetep ngikutin behaviour parent
+        [ProducesResponseType(typeof(TodoItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Produces(MediaTypeNames.Application.Json)]
+        public async Task<ActionResult<TodoItem>> Put2(Guid id, [FromBody] TodoItem todoItemDTO)
+        {
+            // kalau ga ketemu errornya apa? 
+            var todoItem = await _unitOfWork.TodoItemRepository.GetSingleAsync(curr => curr.TodoId == todoItemDTO.TodoId);
+            //todoItem.TodoName = todoItemDTO.TodoName;
+            //todoItem.TodoIsDone = todoItemDTO.TodoIsDone;
+            //_unitOfWork.TodoItemRepository.Edit(todoItem);
+
+            TodoItem todoItem2 = _mapper.Map<TodoItem>(todoItemDTO);
+            todoItem2.TodoId = id;
+            _unitOfWork.TodoItemRepository.Edit(todoItem2);
+            await _unitOfWork.SaveAsync();
+
+            return CreatedAtRoute("TodoDetailLink", new { id = todoItem2.TodoId }, todoItem2);
         }
 
         // DELETE api/<TodosController>/5
@@ -154,39 +199,35 @@ namespace OnboardingCS.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Produces(MediaTypeNames.Application.Json)]
         [HttpDelete("{id}")]
-        public ActionResult<IEnumerable<TodoItem>> Delete(int id)
+        public ActionResult<IEnumerable<TodoItem>> Delete(Guid id)
         {
-            TodoItem selectedTodo = _todoItems.FirstOrDefault(currTodo => currTodo.TodoId == id);
-            if (selectedTodo != null)
-            {
-                _todoItems.Remove(selectedTodo);
-                return new OkObjectResult(_todoItems);
-            }
-            return NotFound();
+            //if (_unitOfWork.TodoItemRepository.IsExist(selectedTodo ))
+            _unitOfWork.TodoItemRepository.Delete(selectedTodo => selectedTodo.TodoId == id);
+            return new OkResult();
         }
 
 
 
-        //// use path "/id" to prevent conflict with GetAll()
-        //// GET api/<TodosController>/id?id={id}
-        ///// <summary>
-        ///// Get a TodoItem using param (just test).
-        ///// </summary>
-        ///// <param name="id"></param>
-        ///// <returns>Selected todo item with given Id</returns>
-        ///// <response code="201">Returns selected todo item</response>
-        ///// <response code="404">If no items with selected Id</response>
-        //[HttpGet("id")]
-        //public ActionResult<TodoItem> GetFromParam([FromQuery] int id)
-        //{
-        //    Console.WriteLine("test");
-        //    Console.WriteLine(Request.Path);
-        //    TodoItem item = _todoItems.FirstOrDefault(item => item.TodoId == id);
-        //    if (item != null)
-        //    {
-        //        return new OkObjectResult(item);
-        //    }
-        //    return new BadRequestObjectResult(id);
-        //}
+        ////// use path "/id" to prevent conflict with GetAll()
+        ////// GET api/<TodosController>/id?id={id}
+        /////// <summary>
+        /////// Get a TodoItem using param (just test).
+        /////// </summary>
+        /////// <param name="id"></param>
+        /////// <returns>Selected todo item with given Id</returns>
+        /////// <response code="201">Returns selected todo item</response>
+        /////// <response code="404">If no items with selected Id</response>
+        ////[HttpGet("id")]
+        ////public ActionResult<TodoItem> GetFromParam([FromQuery] int id)
+        ////{
+        ////    Console.WriteLine("test");
+        ////    Console.WriteLine(Request.Path);
+        ////    TodoItem item = _todoItems.FirstOrDefault(item => item.TodoId == id);
+        ////    if (item != null)
+        ////    {
+        ////        return new OkObjectResult(item);
+        ////    }
+        ////    return new BadRequestObjectResult(id);
+        ////}
     }
 }

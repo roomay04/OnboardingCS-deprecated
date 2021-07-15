@@ -21,53 +21,38 @@ namespace OnboardingCS.Migrations
 
             modelBuilder.Entity("OnboardingCS.Models.Label", b =>
                 {
-                    b.Property<int>("labelId")
+                    b.Property<Guid>("LabelId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("labelName")
+                    b.Property<string>("LabelName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("labelId");
+                    b.HasKey("LabelId");
 
                     b.ToTable("Labels");
                 });
 
             modelBuilder.Entity("OnboardingCS.Models.TodoItem", b =>
                 {
-                    b.Property<int>("TodoId")
+                    b.Property<Guid>("TodoId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("labelId")
-                        .HasColumnType("int");
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("TodoIsDone")
                         .HasColumnType("bit");
 
                     b.Property<string>("TodoName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("TodoId");
 
-                    b.HasIndex("labelId");
-
-                    b.ToTable("TodoItem");
-                });
-
-            modelBuilder.Entity("OnboardingCS.Models.TodoItem", b =>
-                {
-                    b.HasOne("OnboardingCS.Models.Label", null)
-                        .WithMany("todos")
-                        .HasForeignKey("labelId");
-                });
-
-            modelBuilder.Entity("OnboardingCS.Models.Label", b =>
-                {
-                    b.Navigation("todos");
+                    b.ToTable("TodoItems");
                 });
 #pragma warning restore 612, 618
         }
