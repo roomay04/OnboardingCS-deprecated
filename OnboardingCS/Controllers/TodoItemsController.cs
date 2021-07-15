@@ -180,7 +180,7 @@ namespace OnboardingCS.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         public async Task<ActionResult<TodoItem>> Put2(Guid id, [FromBody] TodoItem todoItemDTO)
         {
-            // kalau ga ketemu errornya apa? 
+            // kalau ga ketemu errornya apa? error yg ada yg diupdate tapi ga ada yg berubah
             bool isExists = _unitOfWork.TodoItemRepository.IsExist(curr => curr.TodoId == todoItemDTO.TodoId);
             //todoItem.TodoName = todoItemDTO.TodoName;
             //todoItem.TodoIsDone = todoItemDTO.TodoIsDone;
@@ -219,7 +219,7 @@ namespace OnboardingCS.Controllers
         public ActionResult<IEnumerable<TodoItem>> Delete(Guid id)
         {
             //if (_unitOfWork.TodoItemRepository.IsExist(selectedTodo ))
-            if (_unitOfWork.TodoItemRepository.IsExist( curr => curr.TodoId == id))
+            if (_unitOfWork.TodoItemRepository.IsExist( curr => curr.TodoId == id)) // Kalau ga dihandle ga error, tapi gasesuai expect user aja ga sih?
             { 
                 _unitOfWork.TodoItemRepository.Delete(selectedTodo => selectedTodo.TodoId == id);
                 return new OkResult();
@@ -239,8 +239,7 @@ namespace OnboardingCS.Controllers
         /// </remarks>
         /// <param name="item"></param>
         /// <returns>All recent todo items</returns>
-        /// <response code="200">Returns all todo items with given label id</response>
-        /// <response code="400">If the item is with given label id is not found</response> 
+        /// <response code="200">Returns all todo items with given label id or empty array</response>
         [HttpGet("Labels")]
         public async Task<ActionResult> GetByLabelId([FromQuery] Guid labelId) 
         {
