@@ -14,6 +14,6 @@ namespace OnboardingCS.Models
         public Guid LabelId { get; set; }
         [Required]
         public string LabelName { get; set; }
-        //public IEnumerable<TodoItem> Todos { get; set; }
+        //public List<TodoItem> Todos { get; set; } // ini bikin error LabelId ga ada di TodoItem
     }
 }

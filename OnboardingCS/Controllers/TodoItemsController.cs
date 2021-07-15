@@ -125,20 +125,26 @@ namespace OnboardingCS.Controllers
         [ProducesResponseType(typeof(TodoItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Produces(MediaTypeNames.Application.Json)]
-        public async Task<ActionResult<TodoItem>> Put(Guid id, [FromBody] TodoItem todoItemDTO)
+        public async Task<ActionResult<TodoItem>> Put(Guid id, [FromBody] TodoItemDTO todoItemDTO)
         {
-            // kalau ga ketemu errornya apa? 
             var todoItem = await _unitOfWork.TodoItemRepository.GetSingleAsync(curr => curr.TodoId == todoItemDTO.TodoId);
-            todoItem.TodoName = todoItemDTO.TodoName;
-            todoItem.TodoIsDone = todoItemDTO.TodoIsDone;
-            _unitOfWork.TodoItemRepository.Edit(todoItem);
+
+            // kalau ga ketemu dan langsung dipanggil akan return error 500 System.NullReferenceException: Object reference not set to an instance of an object.
+            // jadi baiknya di handle
+            if (todoItem != null) { 
+                todoItem.TodoName = todoItemDTO.TodoName;
+                todoItem.TodoIsDone = todoItemDTO.TodoIsDone;
+
+                _unitOfWork.TodoItemRepository.Edit(todoItem); 
+                await _unitOfWork.SaveAsync();
+
+                return CreatedAtRoute("TodoDetailLink", new { id = todoItem.TodoId }, todoItem); //TODO: kalau post benernya pake 201 atau 200 ya
+            }
+            return BadRequest();
 
             //TodoItem todoItem2 = _mapper.Map<TodoItem>(todoItemDTO);
             //todoItem2.TodoId = todoItem.TodoId;
             //_unitOfWork.TodoItemRepository.Edit(todoItem);
-            await _unitOfWork.SaveAsync();
-
-            return CreatedAtRoute("TodoDetailLink", new { id = todoItem.TodoId }, todoItem); //TODO: kalau post benernya pake 201 atau 200 ya?
         }
 
         // PUT api/<TodosController>/5
@@ -168,17 +174,21 @@ namespace OnboardingCS.Controllers
         public async Task<ActionResult<TodoItem>> Put2(Guid id, [FromBody] TodoItem todoItemDTO)
         {
             // kalau ga ketemu errornya apa? 
-            var todoItem = await _unitOfWork.TodoItemRepository.GetSingleAsync(curr => curr.TodoId == todoItemDTO.TodoId);
+            bool isExists = await _unitOfWork.TodoItemRepository.IsExist(curr => curr.TodoId == todoItemDTO.TodoId);
             //todoItem.TodoName = todoItemDTO.TodoName;
             //todoItem.TodoIsDone = todoItemDTO.TodoIsDone;
             //_unitOfWork.TodoItemRepository.Edit(todoItem);
 
-            TodoItem todoItem2 = _mapper.Map<TodoItem>(todoItemDTO);
-            todoItem2.TodoId = id;
-            _unitOfWork.TodoItemRepository.Edit(todoItem2);
-            await _unitOfWork.SaveAsync();
+            if (isExists)
+            {
+                TodoItem todoItem2 = _mapper.Map<TodoItem>(todoItemDTO);
+                todoItem2.TodoId = id;
+                _unitOfWork.TodoItemRepository.Edit(todoItem2);
+                await _unitOfWork.SaveAsync();
+                return CreatedAtRoute("TodoDetailLink", new { id = todoItem2.TodoId }, todoItem2);
+            }
+            return BadRequest();
 
-            return CreatedAtRoute("TodoDetailLink", new { id = todoItem2.TodoId }, todoItem2);
         }
 
         // DELETE api/<TodosController>/5
@@ -205,8 +215,6 @@ namespace OnboardingCS.Controllers
             _unitOfWork.TodoItemRepository.Delete(selectedTodo => selectedTodo.TodoId == id);
             return new OkResult();
         }
-
-
 
         ////// use path "/id" to prevent conflict with GetAll()
         ////// GET api/<TodosController>/id?id={id}

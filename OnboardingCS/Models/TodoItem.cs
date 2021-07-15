@@ -18,5 +18,6 @@ namespace OnboardingCS.Models
         [Required]
         public bool TodoIsDone { get; set; }
         public DateTime DueDate { get; set; }
+
     }
 }
