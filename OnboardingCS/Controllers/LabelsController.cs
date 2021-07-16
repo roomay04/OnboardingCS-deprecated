@@ -18,7 +18,7 @@ namespace OnboardingCS.Controllers
         {
             return View();
         }*/
-        private static IEnumerable<Label> _labels = new List<Label>();
+        //private static IEnumerable<Label> _labels = new List<Label>();
         private UnitOfWork _unitOfWork;
         private IMapper _mapper;
 
@@ -33,7 +33,8 @@ namespace OnboardingCS.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<Label>>> GetAll()
         {
-            var result = await _unitOfWork.LabelRepository.GetAll().ToListAsync();
+            var result = await _unitOfWork.LabelRepository.GetAll().Include(x => x.Todos).ToListAsync();
+            //var result2 = await _unitOfWork.LabelRepository.GetAll().ToListAsync();
             //return new OkObjectResult(_mapper.Map<LabelDTO>(result));
             //TODO kalau dto error
             //AutoMapper.AutoMapperMappingException: Missing type map configuration or unsupported mapping.
@@ -46,10 +47,10 @@ namespace OnboardingCS.Controllers
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(Label), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        /*[ProducesErrorResponseType(]*/ //ini apa sih?
-        public ActionResult<Label> Get(Guid id)
+        [ProducesErrorResponseType(typeof(string))] //Kalau error, returnnya apa objectnya bakal kayak apa
+        public async Task<ActionResult<Label>> Get(Guid id)
         {
-            Label label = _labels.FirstOrDefault(label => label.LabelId == id);
+            Label label = await _unitOfWork.LabelRepository.GetSingleAsync(label => label.LabelId == id);
             if (label != null)
             {
                 return new OkObjectResult(label);
