@@ -9,6 +9,6 @@ namespace OnboardingCS.DTO
     {
         public Guid LabelId { get; set; }
         public string LabelName { get; set; }
-        public List<TodoItemDTO> Todos { get; set; }
+        public ICollection<TodoItemDTO> Todos { get; set; }
     }
 }

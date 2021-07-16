@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 
 namespace OnboardingCS.Controllers
 {
@@ -31,16 +32,17 @@ namespace OnboardingCS.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<Label>), 200)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<IEnumerable<Label>>> GetAll()
+        public async Task<ActionResult<IEnumerable<LabelDTO>>> GetAll()
         {
-            var result = await _unitOfWork.LabelRepository.GetAll().Include(x => x.Todos).ToListAsync();
+            var result = await _unitOfWork.LabelRepository.GetAll().Include(x => x.Todos).ProjectTo<LabelDTO>(_mapper.ConfigurationProvider).ToListAsync();
+            //var labelDTO = _mapper.Map<LabelDTO>(result);
             //var result2 = await _unitOfWork.LabelRepository.GetAll().ToListAsync();
-            //return new OkObjectResult(_mapper.Map<LabelDTO>(result));
+            return new OkObjectResult(result);
             //TODO kalau dto error
             //AutoMapper.AutoMapperMappingException: Missing type map configuration or unsupported mapping.
             //Mapping types:
             //Object->LabelDTO
-            return new OkObjectResult(result);
+            //return new OkObjectResult(result);
         }
 
         [HttpGet("{id}", Name = "LabelLink")]

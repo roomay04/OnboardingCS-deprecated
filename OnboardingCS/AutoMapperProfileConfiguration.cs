@@ -12,10 +12,10 @@ namespace OnboardingCS
     {
         public AutoMapperProfileConfiguration()
         {
-            CreateMap<LabelDTO, Label>();
-            CreateMap<Label, LabelDTO>();
-            CreateMap<TodoItem, TodoItemDTO>();
-            CreateMap<TodoItemDTO, TodoItem>();
+            CreateMap<LabelDTO, Label>().ReverseMap();
+            //CreateMap<Label, LabelDTO>();
+            CreateMap<TodoItem, TodoItemDTO>().ReverseMap();
+            //CreateMap<TodoItemDTO, TodoItem>();
         }
     }
 }
