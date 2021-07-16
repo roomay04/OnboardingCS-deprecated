@@ -30,11 +30,12 @@ namespace OnboardingCS.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<Label>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<LabelDTO>), 200)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<LabelDTO>>> GetAll()
         {
-            var result = await _unitOfWork.LabelRepository.GetAll().Include(x => x.Todos).ProjectTo<LabelDTO>(_mapper.ConfigurationProvider).ToListAsync();
+            var result2 = _unitOfWork.LabelRepository.GetAll(); //doesn't include todo on fecth, todos will set as null
+            var result = await result2.ProjectTo<LabelDTO>(_mapper.ConfigurationProvider).ToListAsync();
             return new OkObjectResult(result);
             //ERROR kalau dto 
             //var labelDTO = _mapper.Map<LabelDTO>(result);
@@ -46,17 +47,42 @@ namespace OnboardingCS.Controllers
             //return new OkObjectResult(result);
         }
 
+        [HttpGet("Todos")]
+        [ProducesResponseType(typeof(IEnumerable<LabelWithTodosDTO>), 200)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<IEnumerable<LabelWithTodosDTO>>> GetAllWithTodos()
+        {
+            var result2 = _unitOfWork.LabelRepository.GetAll().Include(x => x.Todos); //include todos on fetch
+            var result = await result2.ProjectTo<LabelWithTodosDTO>(_mapper.ConfigurationProvider).ToListAsync();
+            return new OkObjectResult(result);
+        }
+
         [HttpGet("{id}", Name = "LabelLink")]
         [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(Label), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(LabelDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesErrorResponseType(typeof(string))] //Kalau error, returnnya apa objectnya bakal kayak apa
-        public async Task<ActionResult<Label>> Get(Guid id)
+        public async Task<ActionResult<LabelDTO>> Get(Guid id)
         {
             Label label = await _unitOfWork.LabelRepository.GetSingleAsync(label => label.LabelId == id);
             if (label != null)
             {
-                return new OkObjectResult(label);
+                return new OkObjectResult(_mapper.Map<LabelDTO>(label));
+            }
+            return new BadRequestObjectResult(id);
+        }
+
+        [HttpGet("{id}/Todos", Name = "LabelWithTodosLink")]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(LabelWithTodosDTO), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesErrorResponseType(typeof(string))] //Kalau error, returnnya apa objectnya bakal kayak apa
+        public async Task<ActionResult<LabelDTO>> GetWithTodos(Guid id)
+        {
+            Label label = await _unitOfWork.LabelRepository.GetAll().Include( x => x.Todos).FirstOrDefaultAsync(label => label.LabelId == id);
+            if (label != null)
+            {
+                return new OkObjectResult(_mapper.Map<LabelWithTodosDTO>(label));
             }
             return new BadRequestObjectResult(id);
         }
