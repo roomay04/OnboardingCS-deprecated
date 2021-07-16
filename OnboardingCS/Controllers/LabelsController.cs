@@ -35,13 +35,14 @@ namespace OnboardingCS.Controllers
         public async Task<ActionResult<IEnumerable<LabelDTO>>> GetAll()
         {
             var result = await _unitOfWork.LabelRepository.GetAll().Include(x => x.Todos).ProjectTo<LabelDTO>(_mapper.ConfigurationProvider).ToListAsync();
+            return new OkObjectResult(result);
+            //ERROR kalau dto 
             //var labelDTO = _mapper.Map<LabelDTO>(result);
             //var result2 = await _unitOfWork.LabelRepository.GetAll().ToListAsync();
-            return new OkObjectResult(result);
-            //TODO kalau dto error
             //AutoMapper.AutoMapperMappingException: Missing type map configuration or unsupported mapping.
             //Mapping types:
             //Object->LabelDTO
+            //SOLVED: pakai .ProjectTo karena kalau .Map di _mapper itu single entity
             //return new OkObjectResult(result);
         }
 
