@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnboardingCS.DTO;
+using OnboardingCS.Interface;
 using OnboardingCS.Models;
 using System;
 using System.Collections.Generic;
@@ -19,10 +20,10 @@ namespace OnboardingCS.Controllers
 {
     public class TodoItemsController : BaseController
     {
-        private UnitOfWork _unitOfWork;
+        private IUnitOfWork _unitOfWork;
         private IMapper _mapper;
 
-        public TodoItemsController(UnitOfWork unitOfWork, IMapper mapper)
+        public TodoItemsController(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _mapper = mapper;
             _unitOfWork = unitOfWork;

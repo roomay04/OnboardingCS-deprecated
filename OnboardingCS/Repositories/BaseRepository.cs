@@ -30,7 +30,7 @@ namespace OnboardingCS.Repository
 
         public async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default(CancellationToken))
         {
-            EntityEntry<T> entry = await dbSet.AddAsync(entity, cancellationToken);
+            Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<T> entry = await dbSet.AddAsync(entity, cancellationToken);
             return entry.Entity;
         }
 

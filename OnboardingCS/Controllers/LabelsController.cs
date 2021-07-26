@@ -10,6 +10,8 @@ using System.Net.Mime;
 using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using OnboardingCS.Repositories;
+using OnboardingCS.Interface;
 
 namespace OnboardingCS.Controllers
 {
@@ -20,13 +22,15 @@ namespace OnboardingCS.Controllers
             return View();
         }*/
         //private static IEnumerable<Label> _labels = new List<Label>();
-        private UnitOfWork _unitOfWork;
+        private IUnitOfWork _unitOfWork;
         private IMapper _mapper;
+        private ILabelService _labelService;
 
-        public LabelsController(UnitOfWork unitOfWork, IMapper mapper)
+        public LabelsController(IUnitOfWork unitOfWork, IMapper mapper, ILabelService labelService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _labelService = labelService;
         }
 
         [HttpGet]
@@ -34,8 +38,7 @@ namespace OnboardingCS.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<IEnumerable<LabelDTO>>> GetAll()
         {
-            var result2 = _unitOfWork.LabelRepository.GetAll(); //doesn't include todo on fecth, todos will set as null
-            var result = await result2.ProjectTo<LabelDTO>(_mapper.ConfigurationProvider).ToListAsync();
+            var result = await _labelService.GetAll();
             return new OkObjectResult(result);
             //ERROR kalau dto 
             //var labelDTO = _mapper.Map<LabelDTO>(result);
@@ -122,5 +125,61 @@ namespace OnboardingCS.Controllers
             return new BadRequestResult();
         }
 
+
+        // Get api/<LabelsController>/{id}/Todos
+        /// <summary>
+        /// Get a Label with TodoItems with Redis.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     GET /Labels/5/Todo/Redis
+        ///
+        /// </remarks>
+        /// <param name="item"></param>
+        /// <returns>A Labels with TodoItem for the given Id</returns>
+        /// <response code="201">Returns the Labels with TodoItem</response>
+        /// <response code="400">If the item not found</response>  
+        [HttpGet]
+        [Route("{id}/Todos/Redis")]
+        [ProducesResponseType(typeof(LabelWithTodosDTO), 200)]
+        [ProducesResponseType(typeof(string), 400)]
+        public async Task<ActionResult> GetWithTodoRedisAsync(Guid id)
+        {
+            LabelWithTodosDTO? label = await _labelService.GetLabelWithTodosRedis(id);
+            if (label == null)
+            {
+                return BadRequest();
+            }
+            return new OkObjectResult(label);
+        }
+
+        // DELETE api/<LabelsController>/5
+        /// <summary>
+        /// Delete a Label.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     DELETE /Labels/{id}
+        ///
+        /// </remarks>
+        /// <param name="item"></param>
+        /// <returns>All recent todo items</returns>
+        /// <response code="200">Returns all recent todo items</response>
+        /// <response code="400">If the item is with given id is not found</response>  
+        [ProducesResponseType(typeof(List<TodoItem>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<bool>> Delete(Guid id)
+        {
+            //if (_unitOfWork.TodoItemRepository.IsExist(selectedTodo ))
+            bool isDeleted = await _labelService.DeleteLabel(id);
+            if (isDeleted){
+                return new OkObjectResult(isDeleted);
+            }
+            return new BadRequestObjectResult(isDeleted);
+        }
     }
 }

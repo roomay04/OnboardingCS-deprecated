@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using OnboardingCS.Interface;
 using OnboardingCS.Models;
 using OnboardingCS.Repository;
 using System;
@@ -9,14 +10,14 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OnboardingCS
+namespace OnboardingCS.Repositories
 {
-    public class UnitOfWork : IDisposable
+    public class UnitOfWork : IDisposable, IUnitOfWork
     {
         private readonly HanOnboardingSkdDbContext dbContext;
 
-        public LabelRepository LabelRepository { get; }
-        public TodoItemRepository TodoItemRepository { get; }
+        public ILabelRepository LabelRepository { get; }
+        public ITodoItemRepository TodoItemRepository { get; }
 
         public UnitOfWork(HanOnboardingSkdDbContext context)
         {
