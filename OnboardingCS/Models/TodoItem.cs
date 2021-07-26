@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -29,5 +29,15 @@ namespace OnboardingCS.Models
         //If the foreign key property does not exist, then EF will create an FK column in the Db table with<Dependent Navigation Property Name> + "_" + <Principal Entity Primary Key Property Name
         //e.g.EF will create Grade_GradeId foreign key column in the Students table if the Student entity does not contain foreignkey property for Grade.
         public Label Label { get; set; }
+        [NotMapped]
+        public string WillNotMapped { get; set; }
+        [NotMapped]
+        public bool IsArchieve { get; set; }
+        [NotMapped]
+        public Guid? ParentTodoId { get; set; }
+        [NotMapped]
+        public TodoItem ParentTodo { get; set; }
+        [NotMapped]
+        public ICollection<TodoItem> ChildTodo { get; set; }
     }
 }

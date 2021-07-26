@@ -22,4 +22,5 @@ namespace OnboardingCS.Models
         public bool IsArchive { get; set; }
 
     }
+
 }

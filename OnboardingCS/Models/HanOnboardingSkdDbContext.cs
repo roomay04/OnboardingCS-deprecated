@@ -17,5 +17,8 @@ namespace OnboardingCS.Models
 
         public DbSet<Label> Labels { get; set; }
         public DbSet<TodoItem> TodoItems { get; set; }
+        //public DbSet<Student> Students { get; set; }
+        //public DbSet<Course> Course { get; set; }
+
     }
 }

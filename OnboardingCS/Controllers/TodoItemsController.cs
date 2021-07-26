@@ -59,7 +59,6 @@ namespace OnboardingCS.Controllers
         /// <returns>Selected todo item with given Id</returns>
         /// <response code="201">Returns selected todo item</response>
         /// <response code="404">If no items with selected Id</response>
-        // GET api/<TodosController>/5
         [HttpGet("{id}", Name = "TodoDetailLink")]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(Label), StatusCodes.Status200OK)]
@@ -186,6 +185,8 @@ namespace OnboardingCS.Controllers
             //todoItem.TodoName = todoItemDTO.TodoName;
             //todoItem.TodoIsDone = todoItemDTO.TodoIsDone;
             //_unitOfWork.TodoItemRepository.Edit(todoItem);
+
+            //karena kadang ga semua ganti...
 
             if (isExists)
             {
