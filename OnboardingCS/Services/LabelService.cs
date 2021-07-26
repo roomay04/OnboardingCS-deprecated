@@ -11,6 +11,9 @@ using AutoMapper.QueryableExtensions;
 using System.Linq;
 using System.Threading.Tasks;
 using static OnboardingCS.Services.RedisService;
+using Azure.Messaging.EventHubs.Producer;
+using Newtonsoft.Json;
+using Azure.Messaging.EventHubs;
 
 namespace OnboardingCS.Services
 {
@@ -22,13 +25,16 @@ namespace OnboardingCS.Services
         private readonly ILogger<LabelService> _logger; //TODO kenapa dia readonly ya?
         private IRedisService _redis;
 
-        public LabelService(ILogger<LabelService> logger, IUnitOfWork unitOfWork, IMapper mapper, IConfiguration configuration, IRedisService redisService)
+        private ITodoItemService _todoService;
+
+        public LabelService(ILogger<LabelService> logger, IUnitOfWork unitOfWork, IMapper mapper, IConfiguration configuration, IRedisService redisService, ITodoItemService todoService)
         {
             _mapper = mapper;
             _unitOfWork = unitOfWork;
             _logger = logger;
             _config = configuration;
             _redis = redisService;
+            _todoService = todoService;
         }
         public async Task<LabelWithTodosDTO?> GetLabelWithTodosRedis(Guid id)
         {
@@ -63,6 +69,45 @@ namespace OnboardingCS.Services
             var result2 = _unitOfWork.LabelRepository.GetAll(); //doesn't include todo on fecth, todos will set as null
             var result = await result2.ProjectTo<LabelDTO>(_mapper.ConfigurationProvider).ToListAsync();
             return result;
+        }
+
+        public async Task<LabelWithTodosDTO?> CreateLabelWithTodos(LabelWithTodosDTO labelWithTodosDTO){
+            bool isLabelExist = _unitOfWork.LabelRepository.GetAll().Where(x => x.LabelName == labelWithTodosDTO.LabelName).Any();
+            int countTodoIsExist = labelWithTodosDTO.Todos.Select(todo => _unitOfWork.TodoItemRepository.IsExist(todoInDB => todo.TodoId == todoInDB.TodoId)).Where( isExists => isExists ).Count();
+            if (!isLabelExist && countTodoIsExist == 0)
+            {
+                var label = _mapper.Map<Label>(labelWithTodosDTO);
+                Label labelResult = await _unitOfWork.LabelRepository.AddAsync(label);
+                await _unitOfWork.SaveAsync();
+                await SendLabelToEventHub(labelWithTodosDTO, labelResult, _config);
+
+                //TODO Implement createTodo service and sent event 
+                // List<TodoItem> todos = await labelWithTodosDTO.Todos.AsQueryable().ProjectTo<TodoItem>(_mapper.ConfigurationProvider).ToListAsync();
+                // await _todoService.SendTodoItemToEventHub(TodoItemDTO
+                return await GetLabelWithTodosRedis(labelResult.LabelId); //harusnya kalau created ga perlu masukin ke redis sih....
+            } 
+            throw new Exception("Some TodoItem already exists"); //TODO harusnya apa ya... gimana best practicenya supaya controller atau user tau errornya apa? buat new class Exception?
+        }
+         
+        private static async Task SendLabelToEventHub(LabelWithTodosDTO labelWithTodosDTO, Label label, IConfiguration _config)
+        {
+            
+            string connString = _config.GetValue<string>("EventHub:ConnectionString");
+            string topic = _config.GetValue<string>("EventHub:EventHubNameTest");
+
+            //create event hub producer
+            await using var publisher = new EventHubProducerClient(connString, topic);
+
+            //create batch
+            using var eventBatch = await publisher.CreateBatchAsync();
+
+            //add message, ini bisa banyak sekaligus
+            var message = JsonConvert.SerializeObject(label);
+            eventBatch.TryAdd(new EventData(new BinaryData(message)));
+            eventBatch.TryAdd(new EventData(new BinaryData(labelWithTodosDTO)));
+
+            //send message
+            await publisher.SendAsync(eventBatch);
         }
     }
 }

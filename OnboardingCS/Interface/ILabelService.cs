@@ -11,5 +11,6 @@ namespace OnboardingCS.Interface
         public Task<LabelWithTodosDTO?> GetLabelWithTodosRedis(Guid id);
         public Task<bool> DeleteLabel(Guid id);
         public Task<List<LabelDTO>?> GetAll();
+        public Task<LabelWithTodosDTO?> CreateLabelWithTodos(LabelWithTodosDTO labelWithTodosDTO);
     }
 }

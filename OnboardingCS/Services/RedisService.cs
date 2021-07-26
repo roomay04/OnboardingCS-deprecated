@@ -30,7 +30,7 @@ namespace OnboardingCS.Services
         //TODO: Ini ngapain?
         private List<IServer> GetRedisServers() => Connection.GetEndPoints().Select(endpoint => Connection.GetServer(endpoint)).ToList();
 
-        public async Task<bool?> DeleteStringAsync(string key)
+        public async Task<bool> DeleteStringAsync(string key)
         {
             try
             {

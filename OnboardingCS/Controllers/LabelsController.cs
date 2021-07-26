@@ -113,16 +113,12 @@ namespace OnboardingCS.Controllers
         [ProducesResponseType(typeof(string), 400)]
         public async Task<ActionResult> CreateWithTodosAsync([FromBody] LabelWithTodosDTO labelWithTodosDTO)
         {
-            bool isLabelExist = _unitOfWork.LabelRepository.GetAll().Where(x => x.LabelName == labelWithTodosDTO.LabelName).Any();
-            int countTodoIsExist = labelWithTodosDTO.Todos.Select(todo => _unitOfWork.TodoItemRepository.IsExist(todoInDB => todo.TodoId == todoInDB.TodoId)).Where( isExists => isExists ).Count();
-            if (!isLabelExist && countTodoIsExist == 0)
-            {
-                var label = _mapper.Map<Label>(labelWithTodosDTO);
-                await _unitOfWork.LabelRepository.AddAsync(label);
-                await _unitOfWork.SaveAsync();
+            try{
+                _labelService.CreateLabelWithTodos(labelWithTodosDTO);
                 return new OkResult();
+            }catch (Exception ex){
+                return BadRequest();
             }
-            return new BadRequestResult();
         }
 
 

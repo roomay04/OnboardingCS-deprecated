@@ -46,6 +46,10 @@ namespace OnboardingCS
             services.AddScoped<ITodoItemService, TodoItemService>();
             services.AddScoped<IRedisService, RedisService>();
 
+            //service ini bakal start dan stop sesuai dengan lifetime service nya
+            services.AddHostedService<TodoItemMessageListener>(); //TODO ngetes listener gimana?
+
+            
 
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>
