@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using OnboardingCS.Interface;
+using OnboardingCS.Job;
 using OnboardingCS.Models;
 using OnboardingCS.Repositories;
 using OnboardingCS.Services;
@@ -49,7 +50,10 @@ namespace OnboardingCS
             //service ini bakal start dan stop sesuai dengan lifetime service nya
             services.AddHostedService<TodoItemMessageListener>(); //TODO ngetes listener gimana?
 
-            
+            services.AddTransient<LogTimeJob>(); //TODO ngetes job gimana?
+            services.AddTransient<QuartzJobFactory>();
+
+            services.AddSingleton<ISchedulerService, SchedulerService>();
 
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>
